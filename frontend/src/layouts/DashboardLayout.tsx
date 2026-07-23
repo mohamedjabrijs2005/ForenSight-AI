@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import { Bell, Search, AlertCircle, FileText, User } from 'lucide-react';
+import { Bell, Search, AlertCircle, FileText, User, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MOCK_NOTIFICATIONS = [
@@ -21,6 +21,13 @@ export default function DashboardLayout() {
   const [showNotifs, setShowNotifs] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
   
   const searchRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -46,15 +53,31 @@ export default function DashboardLayout() {
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
       
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-20 md:hidden backdrop-blur-sm transition-opacity" 
+          onClick={() => setMobileMenuOpen(false)} 
+        />
+      )}
+
       <div className="z-10 flex w-full">
-        <Sidebar />
+        <div className={`fixed inset-y-0 left-0 z-30 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <Sidebar />
+        </div>
         
-        <main className="flex-1 flex flex-col h-full relative overflow-hidden bg-background">
-          <header className="h-16 flex items-center justify-between px-8 border-b border-border bg-card relative z-50">
+        <main className="flex-1 flex flex-col h-full relative overflow-hidden bg-background w-full">
+          <header className="h-16 flex items-center justify-between px-4 md:px-8 border-b border-border bg-card relative z-50">
             
             {/* Search Bar */}
-            <div className="relative" ref={searchRef}>
-              <div className="flex items-center bg-muted rounded-full px-4 py-2 w-96 border border-transparent focus-within:bg-white focus-within:border-primary/30 focus-within:shadow-sm transition-all">
+            <div className="relative flex-1 max-w-md flex items-center" ref={searchRef}>
+              <button 
+                className="md:hidden p-2 mr-2 text-muted-foreground hover:text-foreground" 
+                onClick={() => setMobileMenuOpen(true)}
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+              <div className="flex items-center bg-muted rounded-full px-4 py-2 w-full border border-transparent focus-within:bg-white focus-within:border-primary/30 focus-within:shadow-sm transition-all">
                 <Search className="w-4 h-4 text-muted-foreground mr-2 shrink-0" />
                 <input 
                   type="text" 
@@ -156,7 +179,7 @@ export default function DashboardLayout() {
             </div>
           </header>
           
-          <div className="flex-1 overflow-auto p-8 custom-scrollbar">
+          <div className="flex-1 overflow-auto p-4 md:p-8 custom-scrollbar">
             <Outlet />
           </div>
         </main>

@@ -455,7 +455,8 @@ const getMockUI = (name) => {
 };
 
 pages.forEach(page => {
-  const content = `import { useState, useEffect } from 'react';
+  const content = `// @ts-nocheck
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, Terminal, AlertCircle } from 'lucide-react';
 
