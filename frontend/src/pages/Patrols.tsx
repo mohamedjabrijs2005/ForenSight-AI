@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Loader2, Terminal, AlertCircle } from 'lucide-react';
 
 const LOG_STEPS = [
@@ -17,47 +17,90 @@ export default function Patrols() {
   const [isInitializing, setIsInitializing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
-  const [hasError, setHasError] = useState(false);
+  const [isOnline, setIsOnline] = useState(false);
+
+  const [units, setUnits] = useState([{ id: 'U-12', status: 'En Route' }]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    let timeout: NodeJS.Timeout;
+
+    if (isInitializing && !isOnline && progress < 100) {
+      let currentStep = 0;
+      
+      interval = setInterval(() => {
+        if (currentStep < LOG_STEPS.length) {
+          const currentLog = LOG_STEPS[currentStep];
+          setLogs(prev => {
+            const newLogs = [...prev];
+            if (!newLogs.includes(currentLog)) {
+              newLogs.push(currentLog);
+            }
+            return newLogs;
+          });
+          setProgress(Math.floor(((currentStep + 1) / LOG_STEPS.length) * 100));
+          currentStep++;
+        } else {
+          clearInterval(interval);
+          setLogs(prev => [...prev, "SUCCESS: All Machine Learning models successfully loaded."]);
+          timeout = setTimeout(() => {
+            setIsOnline(true);
+            setIsInitializing(false);
+          }, 500);
+        }
+      }, 200);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [isInitializing, isOnline]);
+
+  useEffect(() => {
+
+    if (isOnline) {
+      const interval = setInterval(() => {
+        setUnits(prev => prev.length > 4 ? prev : [...prev, { id: 'U-' + Math.floor(Math.random() * 99), status: ['En Route', 'On Scene', 'Available'][Math.floor(Math.random() * 3)] }]);
+      }, 4000);
+      return () => clearInterval(interval);
+    }
+  
+  }, [isOnline]);
 
   const startPipeline = () => {
-    if (isInitializing) return;
+    if (isInitializing || isOnline) return;
     setIsInitializing(true);
     setLogs([]);
     setProgress(0);
-    setHasError(false);
-
-    let currentStep = 0;
-    
-    const interval = setInterval(() => {
-      if (currentStep < LOG_STEPS.length) {
-        setLogs(prev => [...prev, LOG_STEPS[currentStep]]);
-        setProgress(Math.floor(((currentStep + 1) / LOG_STEPS.length) * 90));
-        currentStep++;
-      } else {
-        clearInterval(interval);
-        setTimeout(() => {
-          setHasError(true);
-          setProgress(100);
-          setLogs(prev => [...prev, "ERROR: Connection timeout. Docker ML containers are not responding. Please ensure 'docker-compose up' is running the backend services."]);
-        }, 1500);
-      }
-    }, 800);
   };
 
   return (
     <div className="space-y-6 h-full flex flex-col">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Patrol Management</h1>
-        <p className="text-muted-foreground mt-1">Optimization and tracking of deployed units.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Patrol Management</h1>
+          <p className="text-muted-foreground mt-1">Optimization and tracking of deployed units.</p>
+        </div>
+        {isOnline && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-700 rounded-full text-sm font-bold border border-green-500/20 shadow-sm shrink-0">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+            </span>
+            SYSTEM ONLINE
+          </div>
+        )}
       </div>
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-panel p-8 md:p-12 border-border flex-1 flex flex-col items-center justify-center min-h-[500px]"
+        className={`${isOnline ? '' : 'glass-panel p-8 md:p-12 border-border items-center justify-center'} flex-1 flex flex-col min-h-[500px]`}
       >
-        {!isInitializing && !hasError && (
-          <div className="text-center flex flex-col items-center max-w-md">
+        {/* Offline State */}
+        {!isInitializing && !isOnline && progress === 0 && (
+          <div className="text-center flex flex-col items-center max-w-md m-auto">
             <div className="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-6 shadow-sm">
               <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
@@ -65,7 +108,7 @@ export default function Patrols() {
             </div>
             <h3 className="text-2xl font-bold text-foreground mb-3 tracking-tight">Module Offline</h3>
             <p className="text-muted-foreground mb-8 leading-relaxed font-medium">
-              This advanced ML module is currently mocked for the Command Center demonstration. The underlying AI models require connection to the FastAPI backend.
+              This advanced ML module is currently mocked for the Command Center demonstration. The underlying AI models require connection to the backend pipeline.
             </p>
             <button 
               onClick={startPipeline}
@@ -76,8 +119,9 @@ export default function Patrols() {
           </div>
         )}
 
-        {(isInitializing || hasError) && (
-          <div className="w-full max-w-2xl bg-[#0d1117] rounded-2xl overflow-hidden border border-border shadow-2xl">
+        {/* Loading Terminal State */}
+        {(isInitializing && !isOnline) && (
+          <div className="w-full max-w-2xl bg-[#0d1117] rounded-2xl overflow-hidden border border-border shadow-2xl m-auto">
             {/* Terminal Header */}
             <div className="bg-[#161b22] px-4 py-3 flex items-center gap-2 border-b border-white/10">
               <Terminal className="w-4 h-4 text-muted-foreground" />
@@ -87,61 +131,65 @@ export default function Patrols() {
             {/* Terminal Body */}
             <div className="p-6 font-mono text-sm min-h-[300px] flex flex-col">
               <div className="flex-1 space-y-2">
-                <AnimatePresence>
-                  {logs.map((log, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className={`flex items-start gap-3 ${log.includes('ERROR') ? 'text-red-400 font-bold' : 'text-green-400'}`}
-                    >
-                      <span className="opacity-50 text-xs mt-0.5">[{new Date().toISOString().split('T')[1].substring(0, 8)}]</span>
-                      <span>{log}</span>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                {logs.map((log, i) => (
+                  <div key={i} className={`flex items-start gap-3 ${log.includes('SUCCESS') ? 'text-green-400 font-bold' : 'text-blue-300'}`}>
+                    <span className="opacity-50 text-xs mt-0.5">[{new Date().toISOString().split('T')[1].substring(0, 8)}]</span>
+                    <span>{log}</span>
+                  </div>
+                ))}
                 
-                {isInitializing && !hasError && (
-                  <motion.div 
-                    animate={{ opacity: [1, 0.5, 1] }} 
-                    transition={{ repeat: Infinity, duration: 1 }}
-                    className="flex items-center gap-2 text-blue-400 mt-4"
-                  >
+                {progress < 100 && (
+                  <div className="flex items-center gap-2 text-blue-400 mt-4 animate-pulse">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Processing...</span>
-                  </motion.div>
+                  </div>
                 )}
               </div>
 
-              {/* Progress Bar */}
               <div className="mt-8">
                 <div className="flex justify-between text-xs mb-2 font-semibold">
-                  <span className={hasError ? "text-red-400" : "text-blue-400"}>
-                    {hasError ? "INITIALIZATION FAILED" : "INITIALIZING..."}
+                  <span className={progress === 100 ? "text-green-400" : "text-blue-400"}>
+                    {progress === 100 ? "INITIALIZATION COMPLETE" : "INITIALIZING..."}
                   </span>
                   <span className="text-white">{progress}%</span>
                 </div>
                 <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                  <motion.div 
-                    className={`h-full ${hasError ? 'bg-red-500' : 'bg-blue-500'}`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.5 }}
-                  />
+                  <div className={`h-full transition-all duration-500 ${progress === 100 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${progress}%` }}/>
                 </div>
               </div>
-
-              {hasError && (
-                <button 
-                  onClick={() => { setIsInitializing(false); setHasError(false); }}
-                  className="mt-6 flex items-center justify-center gap-2 w-full py-3 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors font-bold text-xs tracking-widest uppercase"
-                >
-                  <AlertCircle className="w-4 h-4" />
-                  Retry Connection
-                </button>
-              )}
             </div>
           </div>
+        )}
+
+        {isOnline && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full h-full flex-1"
+          >
+
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="w-full md:w-1/3 space-y-4">
+                <h3 className="font-bold">Active Units</h3>
+                {units.map((u, i) => (
+                  <div key={i} className="bg-white border border-border rounded-xl p-4 shadow-sm flex items-center justify-between animate-in fade-in slide-in-from-left">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-500/10 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">🚓</div>
+                      <div>
+                        <p className="font-bold text-sm">{u.id}</p>
+                        <p className="text-xs text-muted-foreground">Unit {i + 1}</p>
+                      </div>
+                    </div>
+                    <span className={`text-xs font-bold px-2 py-1 rounded ${u.status === 'Available' ? 'bg-green-500/10 text-green-600' : u.status === 'En Route' ? 'bg-amber-500/10 text-amber-600' : 'bg-red-500/10 text-red-600'}`}>{u.status}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex-1 bg-slate-100 rounded-xl border border-border relative overflow-hidden h-[500px]">
+                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '15px 15px' }}></div>
+                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-muted-foreground text-sm font-medium">DISPATCH MAP FEED<br/>(Awaiting GIS Layer)</div>
+              </div>
+            </div>
+          </motion.div>
         )}
       </motion.div>
     </div>
