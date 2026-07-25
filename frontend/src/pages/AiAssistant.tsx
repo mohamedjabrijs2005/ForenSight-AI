@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, User, Send, Loader2, Sparkles } from 'lucide-react';
+import { Bot, User, Send, Sparkles } from 'lucide-react';
 
 interface Message {
   role: 'system' | 'user' | 'ai';

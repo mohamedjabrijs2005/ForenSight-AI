@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FileText, Download, Filter, FileBarChart, Loader2, CheckCircle2 } from 'lucide-react';
+import { FileText, Download, Filter, FileBarChart, Loader2 } from 'lucide-react';
 
 export default function Reports() {
   const [generating, setGenerating] = useState(false);

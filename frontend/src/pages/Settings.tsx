@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, Shield, Server, Bell, Database, Save, CheckCircle2 } from 'lucide-react';
+import { Settings as SettingsIcon, Shield, Server, Save, CheckCircle2 } from 'lucide-react';
 
 export default function Settings() {
   const [saved, setSaved] = useState(false);
