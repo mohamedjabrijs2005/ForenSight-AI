@@ -4,17 +4,18 @@ import Sidebar from '../components/Sidebar';
 import { Bell, Search, AlertCircle, FileText, User, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MOCK_NOTIFICATIONS = [
-  { id: 1, type: 'alert', msg: 'High priority dispatch in Sector 4', time: '2m ago' },
-  { id: 2, type: 'report', msg: 'Q3 Analytics Report generated', time: '1h ago' },
-  { id: 3, type: 'system', msg: 'XGBoost model retrained successfully', time: '3h ago' },
-];
+interface NotificationItem {
+  id: number;
+  type: string;
+  msg: string;
+  time: string;
+}
 
-const MOCK_SEARCH_DB = [
-  { id: 'CID-99201', name: 'John Doe (Ghost)', type: 'Suspect' },
-  { id: 'CAS-8921', name: 'Grand Theft Auto', type: 'Case' },
-  { id: 'LOC-402', name: 'Downtown Financial District', type: 'Location' },
-];
+interface SearchResult {
+  id: string;
+  name: string;
+  type: string;
+}
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ export default function DashboardLayout() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const location = useLocation();
 
   // Close mobile menu on route change
@@ -45,10 +48,23 @@ export default function DashboardLayout() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const searchResults = MOCK_SEARCH_DB.filter(item => 
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    item.id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    fetch('/api/notifications')
+      .then(res => res.json())
+      .then(data => setNotifications(data))
+      .catch(err => console.error(err));
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim().length > 0) {
+      fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`)
+        .then(res => res.json())
+        .then(data => setSearchResults(data))
+        .catch(err => console.error(err));
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery]);
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
@@ -155,7 +171,7 @@ export default function DashboardLayout() {
                         <span className="text-xs text-primary font-semibold cursor-pointer">Mark all read</span>
                       </div>
                       <div className="divide-y divide-border">
-                        {MOCK_NOTIFICATIONS.map(n => (
+                        {notifications.map((n: NotificationItem) => (
                           <div key={n.id} className="p-4 hover:bg-muted/30 cursor-pointer transition-colors flex gap-3">
                             <div className="mt-0.5">
                               {n.type === 'alert' && <AlertCircle className="w-4 h-4 text-red-500" />}
