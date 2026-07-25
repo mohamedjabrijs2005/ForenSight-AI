@@ -27,6 +27,18 @@ export default function Patrols() {
       });
   }, []);
 
+  const handleDispatch = (id: string) => {
+    // Optimistic UI update
+    setUnits(prev => prev.map(unit => 
+      unit.id === id 
+        ? { ...unit, status: 'En Route', assignment: 'New Dispatch Order' } 
+        : unit
+    ));
+    
+    // In a real app, this would be a POST/PUT request to the backend
+    // fetch(`/api/patrols/${id}/dispatch`, { method: 'POST' })
+  };
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -104,9 +116,17 @@ export default function Patrols() {
               </div>
 
               <div className="mt-auto pt-2 border-t border-border flex gap-2">
-                <button className="flex-1 flex items-center justify-center gap-2 bg-primary/10 text-primary hover:bg-primary/20 py-2 rounded-lg text-sm font-semibold transition-colors">
+                <button 
+                  onClick={() => handleDispatch(unit.id)}
+                  disabled={unit.status === 'En Route' || unit.status === 'On Scene'}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    unit.status === 'Available' 
+                      ? 'bg-primary/10 text-primary hover:bg-primary/20' 
+                      : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                  }`}
+                >
                   <Send className="w-4 h-4" />
-                  Dispatch
+                  {unit.status === 'Available' ? 'Dispatch' : 'Dispatched'}
                 </button>
                 <button className="px-4 bg-muted hover:bg-muted/80 py-2 rounded-lg text-sm font-semibold transition-colors">
                   Details
