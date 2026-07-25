@@ -23,8 +23,8 @@ const MENU_ITEMS = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { name: 'Crime Management', path: '/crimes', icon: ShieldAlert },
   { name: 'Crime Map', path: '/map', icon: Map },
-  { name: 'AI Predictions', path: '/predictions', icon: BrainCircuit },
-  { name: 'Digital Twin', path: '/digital-twin', icon: Globe2 },
+  { name: 'AI Predictions', path: '/predictions', icon: BrainCircuit, roles: ['Super Admin', 'Crime Analyst'] },
+  { name: 'Digital Twin', path: '/digital-twin', icon: Globe2, roles: ['Super Admin', 'Crime Analyst'] },
   { name: 'Pattern Discovery', path: '/patterns', icon: Network },
   { name: 'Criminal Intelligence', path: '/intelligence', icon: UserSearch },
   { name: 'CCTV Intelligence', path: '/cctv', icon: Cctv },
@@ -33,7 +33,7 @@ const MENU_ITEMS = [
   { name: 'Reports', path: '/reports', icon: FileText },
   { name: 'AI Assistant', path: '/ai-chat', icon: BotMessageSquare },
   { name: 'Public Portal', path: '/portal', icon: Users },
-  { name: 'Settings', path: '/settings', icon: Settings },
+  { name: 'Settings', path: '/settings', icon: Settings, roles: ['Super Admin'] },
 ];
 
 export default function Sidebar() {
@@ -55,6 +55,10 @@ export default function Sidebar() {
       </div>
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
         {MENU_ITEMS.map((item) => {
+          if (item.roles && user && !item.roles.includes(user.role)) {
+            return null;
+          }
+          
           const Icon = item.icon;
           return (
             <NavLink

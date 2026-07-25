@@ -33,17 +33,33 @@ export default function Login() {
     
     // Simulate API call for Mock Auth
     setTimeout(() => {
-      if (data.email === 'admin@forensight.ai' && data.password === 'password123') {
+      let role = null;
+      let name = '';
+      
+      if (data.password === 'password123') {
+        if (data.email === 'admin@forensight.ai') {
+          role = 'Super Admin';
+          name = 'Chief Inspector';
+        } else if (data.email === 'officer@forensight.ai') {
+          role = 'Police Officer';
+          name = 'Officer Martinez';
+        } else if (data.email === 'analyst@forensight.ai') {
+          role = 'Crime Analyst';
+          name = 'Analyst Chen';
+        }
+      }
+
+      if (role) {
         const mockToken = 'mock_jwt_token_header.payload.signature';
         login(mockToken, {
-          id: 'usr_123',
-          name: 'Chief Inspector',
+          id: 'usr_' + Math.floor(Math.random() * 1000),
+          name: name,
           email: data.email,
-          role: 'Super Admin',
+          role: role as any,
         });
         navigate('/dashboard');
       } else {
-        setServerError('Invalid email or password. Hint: admin@forensight.ai / password123');
+        setServerError('Invalid email or password. Hint: admin | officer | analyst @forensight.ai / password123');
         setIsLoggingIn(false);
       }
     }, 1000);
@@ -69,7 +85,7 @@ export default function Login() {
             {...register('email')}
             type="email"
             className="block w-full pl-11 pr-3 py-3 sm:text-sm border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground transition-all placeholder:text-muted-foreground hover:bg-muted/30"
-            placeholder="admin@forensight.ai"
+            placeholder="admin | officer | analyst @forensight.ai"
           />
         </div>
         {errors.email && (

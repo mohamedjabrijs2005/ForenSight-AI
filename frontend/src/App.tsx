@@ -38,8 +38,6 @@ function App() {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="crimes" element={<Crimes />} />
               <Route path="map" element={<Map />} />
-              <Route path="predictions" element={<Predictions />} />
-              <Route path="digital-twin" element={<DigitalTwin />} />
               <Route path="patterns" element={<Patterns />} />
               <Route path="intelligence" element={<Intelligence />} />
               <Route path="cctv" element={<Cctv />} />
@@ -48,7 +46,16 @@ function App() {
               <Route path="reports" element={<Reports />} />
               <Route path="ai-chat" element={<AiAssistant />} />
               <Route path="portal" element={<Portal />} />
-              <Route path="settings" element={<Settings />} />
+              {/* Super Admin Only Route */}
+              <Route element={<ProtectedRoute allowedRoles={['Super Admin']} />}>
+                <Route path="settings" element={<Settings />} />
+              </Route>
+              
+              {/* Restricted Route */}
+              <Route element={<ProtectedRoute allowedRoles={['Super Admin', 'Crime Analyst']} />}>
+                <Route path="digital-twin" element={<DigitalTwin />} />
+                <Route path="predictions" element={<Predictions />} />
+              </Route>
             </Route>
           </Route>
           
