@@ -1,209 +1,124 @@
-// @ts-nocheck
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, Terminal, AlertCircle } from 'lucide-react';
-
-const LOG_STEPS = [
-  "Initializing secure connection to FastAPI...",
-  "Authenticating JWT token...",
-  "Connecting to PostgreSQL (PostGIS) database...",
-  "Warming up Redis cache layer...",
-  "Loading Machine Learning models (XGBoost, Scikit-learn)...",
-  "Allocating GPU memory tensors...",
-  "Syncing real-time intelligence feeds...",
-  "Establishing Digital Twin websocket...",
-];
+import { FileText, Download, Filter, FileBarChart, Loader2, CheckCircle2 } from 'lucide-react';
 
 export default function Reports() {
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [isOnline, setIsOnline] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [reportType, setReportType] = useState('weekly');
 
-  const [progressVal, setProgressVal] = useState(0);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    let timeout: NodeJS.Timeout;
-
-    if (isInitializing && !isOnline && progress < 100) {
-      let currentStep = 0;
-      
-      interval = setInterval(() => {
-        if (currentStep < LOG_STEPS.length) {
-          const currentLog = LOG_STEPS[currentStep];
-          setLogs(prev => {
-            const newLogs = [...prev];
-            if (!newLogs.includes(currentLog)) {
-              newLogs.push(currentLog);
-            }
-            return newLogs;
-          });
-          setProgress(Math.floor(((currentStep + 1) / LOG_STEPS.length) * 100));
-          currentStep++;
-        } else {
-          clearInterval(interval);
-          setLogs(prev => [...prev, "SUCCESS: All Machine Learning models successfully loaded."]);
-          timeout = setTimeout(() => {
-            setIsOnline(true);
-            setIsInitializing(false);
-          }, 500);
-        }
-      }, 200);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-      if (timeout) clearTimeout(timeout);
-    };
-  }, [isInitializing, isOnline]);
-
-  useEffect(() => {
-
-    if (isOnline) {
-      const interval = setInterval(() => {
-        setProgressVal(prev => (prev >= 100 ? 0 : prev + 5));
-      }, 500);
-      return () => clearInterval(interval);
-    }
-  
-  }, [isOnline]);
-
-  const startPipeline = () => {
-    if (isInitializing || isOnline) return;
-    setIsInitializing(true);
-    setLogs([]);
-    setProgress(0);
+  const handleGenerate = () => {
+    setGenerating(true);
+    setTimeout(() => setGenerating(false), 2000);
   };
 
+  const recentReports = [
+    { id: 'REP-2607-A', name: 'Weekly Incident Summary', date: '2026-07-23', type: 'PDF', size: '2.4 MB' },
+    { id: 'REP-2607-B', name: 'Patrol Efficiency Metrics', date: '2026-07-22', type: 'CSV', size: '1.1 MB' },
+    { id: 'REP-2607-C', name: 'Predictive Threat Analysis', date: '2026-07-20', type: 'PDF', size: '5.6 MB' },
+  ];
+
   return (
-    <div className="space-y-6 h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="flex flex-col h-full gap-6 max-w-5xl mx-auto w-full">
+      <div className="flex items-center gap-3 border-b border-border pb-4">
+        <FileBarChart className="w-8 h-8 text-primary" />
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Reports & Analytics</h1>
-          <p className="text-muted-foreground mt-1">Exportable compliance and statistical reports.</p>
+          <h2 className="text-2xl font-bold tracking-tight">Reports & Analytics</h2>
+          <p className="text-sm text-muted-foreground">Generate and export official compliance documentation</p>
         </div>
-        {isOnline && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-700 rounded-full text-sm font-bold border border-green-500/20 shadow-sm shrink-0">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-            </span>
-            SYSTEM ONLINE
-          </div>
-        )}
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`${isOnline ? '' : 'glass-panel p-8 md:p-12 border-border items-center justify-center'} flex-1 flex flex-col min-h-[500px]`}
-      >
-        {/* Offline State */}
-        {!isInitializing && !isOnline && progress === 0 && (
-          <div className="text-center flex flex-col items-center max-w-md m-auto">
-            <div className="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-6 shadow-sm">
-              <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
+      <div className="grid md:grid-cols-3 gap-6 flex-1">
+        
+        {/* Generator Panel */}
+        <div className="md:col-span-1 bg-card border border-border rounded-xl p-6 flex flex-col gap-6 shadow-sm h-fit">
+          <h3 className="font-bold text-lg border-b border-border pb-2">Generate New Report</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-muted-foreground uppercase mb-2 block">Report Type</label>
+              <select 
+                value={reportType}
+                onChange={(e) => setReportType(e.target.value)}
+                className="w-full bg-muted border border-border rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="weekly">Weekly Incident Summary</option>
+                <option value="monthly">Monthly Crime Statistics</option>
+                <option value="patrol">Patrol Efficiency Report</option>
+                <option value="ai">AI Confidence Logs</option>
+              </select>
             </div>
-            <h3 className="text-2xl font-bold text-foreground mb-3 tracking-tight">Module Offline</h3>
-            <p className="text-muted-foreground mb-8 leading-relaxed font-medium">
-              This advanced ML module is currently mocked for the Command Center demonstration. The underlying AI models require connection to the backend pipeline.
-            </p>
-            <button 
-              onClick={startPipeline}
-              className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-[0_2px_10px_rgba(26,115,232,0.3)] hover:bg-primary/90 transition-all active:scale-[0.98] w-full"
-            >
-              Initialize ML Pipeline
-            </button>
-          </div>
-        )}
 
-        {/* Loading Terminal State */}
-        {(isInitializing && !isOnline) && (
-          <div className="w-full max-w-2xl bg-[#0d1117] rounded-2xl overflow-hidden border border-border shadow-2xl m-auto">
-            {/* Terminal Header */}
-            <div className="bg-[#161b22] px-4 py-3 flex items-center gap-2 border-b border-white/10">
-              <Terminal className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs font-mono text-muted-foreground font-semibold tracking-wider">forensight-ml-pipeline.sh</span>
+            <div>
+              <label className="text-xs font-bold text-muted-foreground uppercase mb-2 block">Date Range</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input type="date" className="bg-muted border border-border rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary" />
+                <input type="date" className="bg-muted border border-border rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary" />
+              </div>
             </div>
             
-            {/* Terminal Body */}
-            <div className="p-6 font-mono text-sm min-h-[300px] flex flex-col">
-              <div className="flex-1 space-y-2">
-                {logs.map((log, i) => (
-                  <div key={i} className={`flex items-start gap-3 ${log.includes('SUCCESS') ? 'text-green-400 font-bold' : 'text-blue-300'}`}>
-                    <span className="opacity-50 text-xs mt-0.5">[{new Date().toISOString().split('T')[1].substring(0, 8)}]</span>
-                    <span>{log}</span>
-                  </div>
-                ))}
-                
-                {progress < 100 && (
-                  <div className="flex items-center gap-2 text-blue-400 mt-4 animate-pulse">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Processing...</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-8">
-                <div className="flex justify-between text-xs mb-2 font-semibold">
-                  <span className={progress === 100 ? "text-green-400" : "text-blue-400"}>
-                    {progress === 100 ? "INITIALIZATION COMPLETE" : "INITIALIZING..."}
-                  </span>
-                  <span className="text-white">{progress}%</span>
-                </div>
-                <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div className={`h-full transition-all duration-500 ${progress === 100 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${progress}%` }}/>
-                </div>
+            <div>
+              <label className="text-xs font-bold text-muted-foreground uppercase mb-2 block">Format</label>
+              <div className="flex gap-2">
+                <button className="flex-1 bg-primary/20 text-primary border border-primary/50 py-2 rounded-lg text-sm font-semibold">PDF</button>
+                <button className="flex-1 bg-muted text-muted-foreground hover:bg-muted/80 border border-border py-2 rounded-lg text-sm font-medium">CSV</button>
               </div>
             </div>
           </div>
-        )}
 
-        {isOnline && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full h-full flex-1"
+          <button 
+            onClick={handleGenerate}
+            disabled={generating}
+            className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors mt-auto disabled:opacity-70"
           >
+            {generating ? (
+              <><Loader2 className="w-5 h-5 animate-spin" /> Generating...</>
+            ) : (
+              <><FileText className="w-5 h-5" /> Generate Report</>
+            )}
+          </button>
+        </div>
 
-            <div className="max-w-4xl mx-auto bg-white rounded-xl border border-border p-8 shadow-sm">
-              <div className="flex items-center justify-between mb-8 border-b border-border pb-6">
-                <div>
-                  <h2 className="text-2xl font-bold">Generate Report</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Compile comprehensive statistical analysis documents.</p>
-                </div>
-                <button className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-sm hover:bg-primary/90">Run Generator</button>
-              </div>
-              <div className="space-y-6">
-                <div className="bg-muted/10 p-6 rounded-xl border border-border">
-                  <h3 className="font-bold text-sm mb-4">Background Processing</h3>
-                  <div className="flex justify-between text-xs mb-2 font-mono">
-                    <span>Compiling Q3 Incident Data...</span>
-                    <span>{progressVal}%</span>
+        {/* History Panel */}
+        <div className="md:col-span-2 bg-card border border-border rounded-xl p-6 flex flex-col shadow-sm">
+          <div className="flex justify-between items-center border-b border-border pb-4 mb-4">
+            <h3 className="font-bold text-lg">Report History</h3>
+            <button className="text-muted-foreground hover:text-foreground p-2 bg-muted rounded-lg transition-colors">
+              <Filter className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
+            {recentReports.map((report) => (
+              <div key={report.id} className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20 hover:bg-muted/50 transition-colors group">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center text-primary">
+                    <FileText className="w-5 h-5" />
                   </div>
-                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progressVal}%` }}></div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  {[1, 2].map(i => (
-                    <div key={i} className="border border-border rounded-xl p-4 flex items-center gap-4 hover:border-primary cursor-pointer transition-colors">
-                      <div className="w-12 h-12 bg-red-500/10 text-red-600 rounded-lg flex items-center justify-center font-bold">PDF</div>
-                      <div>
-                        <p className="font-bold text-sm">Monthly Overview - ${i}</p>
-                        <p className="text-xs text-muted-foreground">Generated today</p>
-                      </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-foreground">{report.name}</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs font-mono text-muted-foreground">{report.id}</span>
+                      <span className="text-xs text-muted-foreground">•</span>
+                      <span className="text-xs text-muted-foreground">{report.date}</span>
                     </div>
-                  ))}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <div className="text-right hidden sm:block">
+                    <div className="text-xs font-bold text-muted-foreground">{report.type}</div>
+                    <div className="text-xs text-muted-foreground">{report.size}</div>
+                  </div>
+                  <button className="p-2 bg-background border border-border rounded-lg text-foreground hover:text-primary hover:border-primary/50 transition-colors">
+                    <Download className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </motion.div>
+            ))}
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }

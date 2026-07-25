@@ -1,187 +1,96 @@
-// @ts-nocheck
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Loader2, Terminal, AlertCircle } from 'lucide-react';
-
-const LOG_STEPS = [
-  "Initializing secure connection to FastAPI...",
-  "Authenticating JWT token...",
-  "Connecting to PostgreSQL (PostGIS) database...",
-  "Warming up Redis cache layer...",
-  "Loading Machine Learning models (XGBoost, Scikit-learn)...",
-  "Allocating GPU memory tensors...",
-  "Syncing real-time intelligence feeds...",
-  "Establishing Digital Twin websocket...",
-];
+import { Globe2, Layers, Cpu, Activity, Maximize } from 'lucide-react';
 
 export default function DigitalTwin() {
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [isOnline, setIsOnline] = useState(false);
-
-  const [rotation, setRotation] = useState(0);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    let timeout: NodeJS.Timeout;
-
-    if (isInitializing && !isOnline && progress < 100) {
-      let currentStep = 0;
-      
-      interval = setInterval(() => {
-        if (currentStep < LOG_STEPS.length) {
-          const currentLog = LOG_STEPS[currentStep];
-          setLogs(prev => {
-            const newLogs = [...prev];
-            if (!newLogs.includes(currentLog)) {
-              newLogs.push(currentLog);
-            }
-            return newLogs;
-          });
-          setProgress(Math.floor(((currentStep + 1) / LOG_STEPS.length) * 100));
-          currentStep++;
-        } else {
-          clearInterval(interval);
-          setLogs(prev => [...prev, "SUCCESS: All Machine Learning models successfully loaded."]);
-          timeout = setTimeout(() => {
-            setIsOnline(true);
-            setIsInitializing(false);
-          }, 500);
-        }
-      }, 200);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-      if (timeout) clearTimeout(timeout);
-    };
-  }, [isInitializing, isOnline]);
-
-  useEffect(() => {
-
-    if (isOnline) {
-      const interval = setInterval(() => {
-        setRotation(prev => (prev + 1) % 360);
-      }, 50);
-      return () => clearInterval(interval);
-    }
-  
-  }, [isOnline]);
-
-  const startPipeline = () => {
-    if (isInitializing || isOnline) return;
-    setIsInitializing(true);
-    setLogs([]);
-    setProgress(0);
-  };
-
   return (
-    <div className="space-y-6 h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Digital Twin</h1>
-          <p className="text-muted-foreground mt-1">3D spatial simulation of the city infrastructure.</p>
+    <div className="flex flex-col h-full gap-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Globe2 className="w-6 h-6 text-primary" />
+          <h2 className="text-2xl font-bold tracking-tight">Digital Twin Simulation</h2>
         </div>
-        {isOnline && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-700 rounded-full text-sm font-bold border border-green-500/20 shadow-sm shrink-0">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-            </span>
-            SYSTEM ONLINE
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+          <span className="text-sm font-mono text-muted-foreground">SYNCING SECTOR 4</span>
+        </div>
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`${isOnline ? '' : 'glass-panel p-8 md:p-12 border-border items-center justify-center'} flex-1 flex flex-col min-h-[500px]`}
-      >
-        {/* Offline State */}
-        {!isInitializing && !isOnline && progress === 0 && (
-          <div className="text-center flex flex-col items-center max-w-md m-auto">
-            <div className="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-6 shadow-sm">
-              <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
-            </div>
-            <h3 className="text-2xl font-bold text-foreground mb-3 tracking-tight">Module Offline</h3>
-            <p className="text-muted-foreground mb-8 leading-relaxed font-medium">
-              This advanced ML module is currently mocked for the Command Center demonstration. The underlying AI models require connection to the backend pipeline.
-            </p>
-            <button 
-              onClick={startPipeline}
-              className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-[0_2px_10px_rgba(26,115,232,0.3)] hover:bg-primary/90 transition-all active:scale-[0.98] w-full"
-            >
-              Initialize ML Pipeline
+      <div className="flex-1 grid lg:grid-cols-4 gap-6 min-h-[400px]">
+        {/* Main 3D View Placeholder */}
+        <div className="lg:col-span-3 bg-card border border-border rounded-xl relative overflow-hidden flex flex-col group">
+          <div className="absolute top-4 right-4 z-10 flex gap-2">
+            <button className="p-2 bg-black/50 text-white rounded hover:bg-black/80 backdrop-blur">
+              <Layers className="w-4 h-4" />
+            </button>
+            <button className="p-2 bg-black/50 text-white rounded hover:bg-black/80 backdrop-blur">
+              <Maximize className="w-4 h-4" />
             </button>
           </div>
-        )}
-
-        {/* Loading Terminal State */}
-        {(isInitializing && !isOnline) && (
-          <div className="w-full max-w-2xl bg-[#0d1117] rounded-2xl overflow-hidden border border-border shadow-2xl m-auto">
-            {/* Terminal Header */}
-            <div className="bg-[#161b22] px-4 py-3 flex items-center gap-2 border-b border-white/10">
-              <Terminal className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs font-mono text-muted-foreground font-semibold tracking-wider">forensight-ml-pipeline.sh</span>
-            </div>
+          
+          <div className="flex-1 bg-black/90 relative overflow-hidden flex items-center justify-center">
+            {/* Grid overlay for tech feel */}
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(rgba(0,150,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(0,150,255,0.2) 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
             
-            {/* Terminal Body */}
-            <div className="p-6 font-mono text-sm min-h-[300px] flex flex-col">
-              <div className="flex-1 space-y-2">
-                {logs.map((log, i) => (
-                  <div key={i} className={`flex items-start gap-3 ${log.includes('SUCCESS') ? 'text-green-400 font-bold' : 'text-blue-300'}`}>
-                    <span className="opacity-50 text-xs mt-0.5">[{new Date().toISOString().split('T')[1].substring(0, 8)}]</span>
-                    <span>{log}</span>
-                  </div>
-                ))}
-                
-                {progress < 100 && (
-                  <div className="flex items-center gap-2 text-blue-400 mt-4 animate-pulse">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Processing...</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-8">
-                <div className="flex justify-between text-xs mb-2 font-semibold">
-                  <span className={progress === 100 ? "text-green-400" : "text-blue-400"}>
-                    {progress === 100 ? "INITIALIZATION COMPLETE" : "INITIALIZING..."}
-                  </span>
-                  <span className="text-white">{progress}%</span>
-                </div>
-                <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div className={`h-full transition-all duration-500 ${progress === 100 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${progress}%` }}/>
-                </div>
+            <div className="text-center relative z-10">
+              <Globe2 className="w-24 h-24 text-primary opacity-50 mx-auto mb-4 animate-[spin_10s_linear_infinite]" />
+              <p className="font-mono text-primary/70 tracking-widest text-sm uppercase">Loading WebGL City Mesh...</p>
+              <div className="w-48 h-1 bg-primary/20 rounded-full mx-auto mt-4 overflow-hidden">
+                <div className="w-1/2 h-full bg-primary animate-[bounce_2s_infinite]"></div>
               </div>
             </div>
           </div>
-        )}
+          
+          <div className="p-3 bg-muted/30 border-t border-border flex justify-between text-xs font-mono text-muted-foreground">
+            <span>COORDS: 34.0522° N, 118.2437° W</span>
+            <span>ZOOM: 14.5x</span>
+            <span>LAYERS: INFRASTRUCTURE, TRAFFIC</span>
+          </div>
+        </div>
 
-        {isOnline && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full h-full flex-1"
-          >
-
-            <div className="relative w-full h-[600px] bg-[#09090b] rounded-xl overflow-hidden shadow-inner flex items-center justify-center border border-border perspective-[1000px]">
-              <div className="absolute top-4 left-4 text-primary text-xs font-mono bg-primary/10 px-3 py-1 rounded">SIMULATION RENDER</div>
-              <div className="w-64 h-64 border-2 border-primary/40 rounded-xl flex items-center justify-center transform-style-3d transition-transform duration-100" style={{ transform: `rotateX(60deg) rotateZ(${rotation}deg)` }}>
-                <div className="absolute w-full h-full border border-primary/20 grid grid-cols-4 grid-rows-4">
-                  {Array(16).fill(0).map((_, i) => <div key={i} className="border border-primary/10"></div>)}
-                </div>
-                <div className="w-16 h-32 bg-primary/30 absolute border border-primary transform translate-z-16 -translate-x-12 -translate-y-8"></div>
-                <div className="w-24 h-16 bg-blue-500/30 absolute border border-blue-500 transform translate-z-8 translate-x-12 translate-y-12"></div>
+        {/* Sidebar Controls */}
+        <div className="flex flex-col gap-4">
+          <div className="bg-card border border-border rounded-xl p-4 flex-1">
+            <h3 className="font-bold text-sm mb-4 border-b border-border pb-2 flex items-center gap-2">
+              <Cpu className="w-4 h-4" /> Simulation Controls
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-muted-foreground flex justify-between mb-1">
+                  <span>Time Simulation</span>
+                  <span>+4 HRS</span>
+                </label>
+                <input type="range" className="w-full accent-primary" />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-muted-foreground">Active Overlays</label>
+                <label className="flex items-center gap-2 text-sm bg-muted/50 p-2 rounded border border-border/50 cursor-pointer hover:bg-muted/80">
+                  <input type="checkbox" defaultChecked className="accent-primary" />
+                  Traffic Density
+                </label>
+                <label className="flex items-center gap-2 text-sm bg-muted/50 p-2 rounded border border-border/50 cursor-pointer hover:bg-muted/80">
+                  <input type="checkbox" defaultChecked className="accent-primary" />
+                  Police Presence
+                </label>
+                <label className="flex items-center gap-2 text-sm bg-muted/50 p-2 rounded border border-border/50 cursor-pointer hover:bg-muted/80">
+                  <input type="checkbox" className="accent-primary" />
+                  Cell Tower Triangulation
+                </label>
               </div>
             </div>
-          </motion.div>
-        )}
-      </motion.div>
+          </div>
+          
+          <div className="bg-card border border-border rounded-xl p-4">
+             <h3 className="font-bold text-sm mb-3 flex items-center gap-2 text-red-500">
+              <Activity className="w-4 h-4" /> Live Events
+            </h3>
+            <ul className="space-y-2 text-xs font-medium">
+              <li className="flex gap-2 text-muted-foreground"><span className="text-red-500 font-mono">14:32</span> Accident on I-5</li>
+              <li className="flex gap-2 text-muted-foreground"><span className="text-yellow-500 font-mono">14:28</span> High congestion in D12</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

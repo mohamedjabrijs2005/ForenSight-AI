@@ -1,193 +1,172 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Loader2, Terminal, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Network, Loader2, Info } from 'lucide-react';
 
-const LOG_STEPS = [
-  "Initializing secure connection to FastAPI...",
-  "Authenticating JWT token...",
-  "Connecting to PostgreSQL (PostGIS) database...",
-  "Warming up Redis cache layer...",
-  "Loading Machine Learning models (XGBoost, Scikit-learn)...",
-  "Allocating GPU memory tensors...",
-  "Syncing real-time intelligence feeds...",
-  "Establishing Digital Twin websocket...",
-];
+interface Node {
+  id: string;
+  type: 'suspect' | 'incident' | 'location' | 'vehicle';
+  label: string;
+  danger?: number;
+  date?: string;
+}
+
+interface Edge {
+  source: string;
+  target: string;
+  label: string;
+}
+
+interface PatternData {
+  nodes: Node[];
+  edges: Edge[];
+}
 
 export default function Patterns() {
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [isOnline, setIsOnline] = useState(false);
-
-  const [nodes, setNodes] = useState([{ id: 1, type: 'suspect' }]);
+  const [data, setData] = useState<PatternData | null>(null);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    let timeout: NodeJS.Timeout;
+    fetch('/api/patterns')
+      .then(res => res.json())
+      .then(d => {
+        setData(d);
+        setLoading(false);
+      });
+  }, []);
 
-    if (isInitializing && !isOnline && progress < 100) {
-      let currentStep = 0;
-      
-      interval = setInterval(() => {
-        if (currentStep < LOG_STEPS.length) {
-          const currentLog = LOG_STEPS[currentStep];
-          setLogs(prev => {
-            const newLogs = [...prev];
-            if (!newLogs.includes(currentLog)) {
-              newLogs.push(currentLog);
-            }
-            return newLogs;
-          });
-          setProgress(Math.floor(((currentStep + 1) / LOG_STEPS.length) * 100));
-          currentStep++;
-        } else {
-          clearInterval(interval);
-          setLogs(prev => [...prev, "SUCCESS: All Machine Learning models successfully loaded."]);
-          timeout = setTimeout(() => {
-            setIsOnline(true);
-            setIsInitializing(false);
-          }, 500);
-        }
-      }, 200);
-    }
+  if (loading || !data) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
-    return () => {
-      if (interval) clearInterval(interval);
-      if (timeout) clearTimeout(timeout);
-    };
-  }, [isInitializing, isOnline]);
-
-  useEffect(() => {
-
-    if (isOnline) {
-      const interval = setInterval(() => {
-        setNodes(prev => {
-          if (prev.length > 6) return prev;
-          return [...prev, { id: prev.length + 1, type: Math.random() > 0.5 ? 'suspect' : 'location' }];
-        });
-      }, 3000);
-      return () => clearInterval(interval);
-    }
-  
-  }, [isOnline]);
-
-  const startPipeline = () => {
-    if (isInitializing || isOnline) return;
-    setIsInitializing(true);
-    setLogs([]);
-    setProgress(0);
-  };
+  // Pre-calculate positions for a mock force-directed look
+  const positions = {
+    "node-1": { x: 30, y: 30 },
+    "node-2": { x: 70, y: 20 },
+    "node-3": { x: 50, y: 15 },
+    "node-4": { x: 50, y: 50 },
+    "node-5": { x: 20, y: 70 },
+    "node-6": { x: 80, y: 60 },
+    "node-7": { x: 50, y: 85 }
+  } as Record<string, {x: number, y: number}>;
 
   return (
-    <div className="space-y-6 h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Pattern Discovery</h1>
-          <p className="text-muted-foreground mt-1">AI-driven identification of hidden crime patterns.</p>
-        </div>
-        {isOnline && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-700 rounded-full text-sm font-bold border border-green-500/20 shadow-sm shrink-0">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-            </span>
-            SYSTEM ONLINE
-          </div>
-        )}
+    <div className="flex flex-col h-full gap-4">
+      <div className="flex items-center gap-3">
+        <Network className="w-6 h-6 text-primary" />
+        <h2 className="text-2xl font-bold tracking-tight">Pattern Discovery</h2>
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`${isOnline ? '' : 'glass-panel p-8 md:p-12 border-border items-center justify-center'} flex-1 flex flex-col min-h-[500px]`}
-      >
-        {/* Offline State */}
-        {!isInitializing && !isOnline && progress === 0 && (
-          <div className="text-center flex flex-col items-center max-w-md m-auto">
-            <div className="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-6 shadow-sm">
-              <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
-            </div>
-            <h3 className="text-2xl font-bold text-foreground mb-3 tracking-tight">Module Offline</h3>
-            <p className="text-muted-foreground mb-8 leading-relaxed font-medium">
-              This advanced ML module is currently mocked for the Command Center demonstration. The underlying AI models require connection to the backend pipeline.
-            </p>
-            <button 
-              onClick={startPipeline}
-              className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-[0_2px_10px_rgba(26,115,232,0.3)] hover:bg-primary/90 transition-all active:scale-[0.98] w-full"
-            >
-              Initialize ML Pipeline
-            </button>
-          </div>
-        )}
+      <div className="flex-1 flex gap-4 overflow-hidden relative">
+        {/* Network Graph Area */}
+        <div className="flex-1 bg-card/30 border border-border rounded-xl relative overflow-hidden flex items-center justify-center">
+          
+          <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
+          
+          <div className="relative w-full max-w-3xl aspect-square">
+            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+              {data.edges.map((edge, i) => {
+                const s = positions[edge.source];
+                const t = positions[edge.target];
+                if (!s || !t) return null;
+                return (
+                  <g key={i}>
+                    <line x1={`${s.x}%`} y1={`${s.y}%`} x2={`${t.x}%`} y2={`${t.y}%`} stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" />
+                    <text x={`${(s.x + t.x)/2}%`} y={`${(s.y + t.y)/2}%`} fill="rgba(255,255,255,0.5)" fontSize="10" textAnchor="middle" dy="-5">{edge.label}</text>
+                  </g>
+                );
+              })}
+            </svg>
 
-        {/* Loading Terminal State */}
-        {(isInitializing && !isOnline) && (
-          <div className="w-full max-w-2xl bg-[#0d1117] rounded-2xl overflow-hidden border border-border shadow-2xl m-auto">
-            {/* Terminal Header */}
-            <div className="bg-[#161b22] px-4 py-3 flex items-center gap-2 border-b border-white/10">
-              <Terminal className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs font-mono text-muted-foreground font-semibold tracking-wider">forensight-ml-pipeline.sh</span>
-            </div>
-            
-            {/* Terminal Body */}
-            <div className="p-6 font-mono text-sm min-h-[300px] flex flex-col">
-              <div className="flex-1 space-y-2">
-                {logs.map((log, i) => (
-                  <div key={i} className={`flex items-start gap-3 ${log.includes('SUCCESS') ? 'text-green-400 font-bold' : 'text-blue-300'}`}>
-                    <span className="opacity-50 text-xs mt-0.5">[{new Date().toISOString().split('T')[1].substring(0, 8)}]</span>
-                    <span>{log}</span>
+            {data.nodes.map(node => {
+              const pos = positions[node.id];
+              if (!pos) return null;
+              
+              const isSelected = selectedNode?.id === node.id;
+              let color = 'bg-blue-500';
+              if (node.type === 'suspect') color = 'bg-red-500';
+              if (node.type === 'incident') color = 'bg-yellow-500';
+              if (node.type === 'location') color = 'bg-green-500';
+
+              return (
+                <motion.button
+                  key={node.id}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedNode(node)}
+                  className={`absolute w-12 h-12 -ml-6 -mt-6 rounded-full flex items-center justify-center shadow-lg transition-shadow cursor-pointer ${color} ${isSelected ? 'ring-4 ring-primary ring-offset-4 ring-offset-background' : 'hover:ring-2 ring-white/50'}`}
+                  style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+                >
+                  <span className="sr-only">{node.label}</span>
+                  <div className="absolute top-full mt-2 whitespace-nowrap text-xs font-bold bg-background/80 px-2 py-1 rounded backdrop-blur border border-border">
+                    {node.label}
                   </div>
-                ))}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Side Panel */}
+        <AnimatePresence>
+          {selectedNode && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="w-80 bg-card border border-border rounded-xl p-6 shadow-2xl flex flex-col gap-4"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{selectedNode.type}</span>
+                  <h3 className="text-xl font-bold text-foreground mt-1">{selectedNode.label}</h3>
+                </div>
+                <button onClick={() => setSelectedNode(null)} className="text-muted-foreground hover:text-foreground">
+                  ×
+                </button>
+              </div>
+
+              <div className="bg-muted/30 p-4 rounded-lg text-sm space-y-3 border border-border/50">
+                <div className="flex items-start gap-2">
+                  <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <p className="text-muted-foreground">Detailed analytical breakdown for this node. The system has identified this entity via multi-modal synthesis.</p>
+                </div>
                 
-                {progress < 100 && (
-                  <div className="flex items-center gap-2 text-blue-400 mt-4 animate-pulse">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Processing...</span>
+                {selectedNode.danger !== undefined && (
+                  <div>
+                    <span className="block text-xs font-bold text-muted-foreground">THREAT PROBABILITY</span>
+                    <div className="w-full bg-secondary h-2 rounded-full mt-1 overflow-hidden">
+                      <div className="bg-red-500 h-full" style={{ width: `${selectedNode.danger * 100}%` }}></div>
+                    </div>
                   </div>
                 )}
-              </div>
-
-              <div className="mt-8">
-                <div className="flex justify-between text-xs mb-2 font-semibold">
-                  <span className={progress === 100 ? "text-green-400" : "text-blue-400"}>
-                    {progress === 100 ? "INITIALIZATION COMPLETE" : "INITIALIZING..."}
-                  </span>
-                  <span className="text-white">{progress}%</span>
-                </div>
-                <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div className={`h-full transition-all duration-500 ${progress === 100 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${progress}%` }}/>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {isOnline && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full h-full flex-1"
-          >
-
-            <div className="relative w-full h-[500px] bg-slate-50 border border-border rounded-xl overflow-hidden flex items-center justify-center">
-              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-              <div className="relative w-full h-full p-8">
-                {nodes.map((node, i) => (
-                  <div key={node.id} className="absolute animate-in zoom-in fade-in flex flex-col items-center gap-2" style={{ top: `${20 + (i * 15)}%`, left: `${20 + (i * 12)}%` }}>
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg ${node.type === 'suspect' ? 'bg-red-500' : 'bg-blue-500'}`}>
-                       {node.type === 'suspect' ? <AlertCircle className="w-6 h-6" /> : <Terminal className="w-6 h-6" />}
-                    </div>
-                    <span className="text-[10px] font-bold uppercase bg-white px-2 py-0.5 rounded shadow-sm border border-border">{node.type} {node.id}</span>
+                
+                {selectedNode.date && (
+                  <div>
+                    <span className="block text-xs font-bold text-muted-foreground">INCIDENT DATE</span>
+                    <span className="font-mono">{selectedNode.date}</span>
                   </div>
-                ))}
+                )}
+
+                <div>
+                  <span className="block text-xs font-bold text-muted-foreground">NODE ID</span>
+                  <span className="font-mono text-xs">{selectedNode.id}</span>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </motion.div>
+
+              <div className="mt-auto">
+                <button className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 py-2 rounded-lg font-semibold transition-colors text-sm">
+                  Run Deep Trace
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

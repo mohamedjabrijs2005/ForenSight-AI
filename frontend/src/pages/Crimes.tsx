@@ -1,195 +1,163 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Loader2, Terminal, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, ShieldAlert, FolderOpen, AlertTriangle, FileText, ChevronRight, X } from 'lucide-react';
 
-const LOG_STEPS = [
-  "Initializing secure connection to FastAPI...",
-  "Authenticating JWT token...",
-  "Connecting to PostgreSQL (PostGIS) database...",
-  "Warming up Redis cache layer...",
-  "Loading Machine Learning models (XGBoost, Scikit-learn)...",
-  "Allocating GPU memory tensors...",
-  "Syncing real-time intelligence feeds...",
-  "Establishing Digital Twin websocket...",
-];
+interface CrimeCase {
+  id: string;
+  title: string;
+  status: string;
+  severity: string;
+  date: string;
+  location: string;
+  assignedTo: string;
+  description: string;
+  evidence: string[];
+}
 
 export default function Crimes() {
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [isOnline, setIsOnline] = useState(false);
-
-  const [cases, setCases] = useState([{ id: 'CAS-9012', type: 'Burglary', status: 'In Progress' }]);
+  const [cases, setCases] = useState<CrimeCase[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCase, setSelectedCase] = useState<CrimeCase | null>(null);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    let timeout: NodeJS.Timeout;
+    fetch('/api/crimes')
+      .then(res => res.json())
+      .then(data => {
+        setCases(data);
+        setLoading(false);
+      });
+  }, []);
 
-    if (isInitializing && !isOnline && progress < 100) {
-      let currentStep = 0;
-      
-      interval = setInterval(() => {
-        if (currentStep < LOG_STEPS.length) {
-          const currentLog = LOG_STEPS[currentStep];
-          setLogs(prev => {
-            const newLogs = [...prev];
-            if (!newLogs.includes(currentLog)) {
-              newLogs.push(currentLog);
-            }
-            return newLogs;
-          });
-          setProgress(Math.floor(((currentStep + 1) / LOG_STEPS.length) * 100));
-          currentStep++;
-        } else {
-          clearInterval(interval);
-          setLogs(prev => [...prev, "SUCCESS: All Machine Learning models successfully loaded."]);
-          timeout = setTimeout(() => {
-            setIsOnline(true);
-            setIsInitializing(false);
-          }, 500);
-        }
-      }, 200);
-    }
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
-    return () => {
-      if (interval) clearInterval(interval);
-      if (timeout) clearTimeout(timeout);
-    };
-  }, [isInitializing, isOnline]);
-
-  useEffect(() => {
-
-    if (isOnline) {
-      const interval = setInterval(() => {
-        setCases(prev => {
-          if (prev.length > 5) return prev;
-          return [{ id: 'CAS-' + Math.floor(Math.random() * 9999), type: ['Theft', 'Assault', 'Fraud'][Math.floor(Math.random() * 3)], status: 'To Do' }, ...prev];
-        });
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  
-  }, [isOnline]);
-
-  const startPipeline = () => {
-    if (isInitializing || isOnline) return;
-    setIsInitializing(true);
-    setLogs([]);
-    setProgress(0);
-  };
+  const columns = ['Open', 'Under Investigation', 'In Progress', 'Closed'];
 
   return (
-    <div className="space-y-6 h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Crime Management</h1>
-          <p className="text-muted-foreground mt-1">Centralized database of all reported incidents.</p>
-        </div>
-        {isOnline && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-700 rounded-full text-sm font-bold border border-green-500/20 shadow-sm shrink-0">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-            </span>
-            SYSTEM ONLINE
-          </div>
-        )}
+    <div className="flex flex-col h-full gap-6">
+      <div className="flex items-center gap-3">
+        <ShieldAlert className="w-6 h-6 text-primary" />
+        <h2 className="text-2xl font-bold tracking-tight">Crime Management Board</h2>
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`${isOnline ? '' : 'glass-panel p-8 md:p-12 border-border items-center justify-center'} flex-1 flex flex-col min-h-[500px]`}
-      >
-        {/* Offline State */}
-        {!isInitializing && !isOnline && progress === 0 && (
-          <div className="text-center flex flex-col items-center max-w-md m-auto">
-            <div className="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-6 shadow-sm">
-              <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
-            </div>
-            <h3 className="text-2xl font-bold text-foreground mb-3 tracking-tight">Module Offline</h3>
-            <p className="text-muted-foreground mb-8 leading-relaxed font-medium">
-              This advanced ML module is currently mocked for the Command Center demonstration. The underlying AI models require connection to the backend pipeline.
-            </p>
-            <button 
-              onClick={startPipeline}
-              className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-[0_2px_10px_rgba(26,115,232,0.3)] hover:bg-primary/90 transition-all active:scale-[0.98] w-full"
-            >
-              Initialize ML Pipeline
-            </button>
-          </div>
-        )}
-
-        {/* Loading Terminal State */}
-        {(isInitializing && !isOnline) && (
-          <div className="w-full max-w-2xl bg-[#0d1117] rounded-2xl overflow-hidden border border-border shadow-2xl m-auto">
-            {/* Terminal Header */}
-            <div className="bg-[#161b22] px-4 py-3 flex items-center gap-2 border-b border-white/10">
-              <Terminal className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs font-mono text-muted-foreground font-semibold tracking-wider">forensight-ml-pipeline.sh</span>
-            </div>
-            
-            {/* Terminal Body */}
-            <div className="p-6 font-mono text-sm min-h-[300px] flex flex-col">
-              <div className="flex-1 space-y-2">
-                {logs.map((log, i) => (
-                  <div key={i} className={`flex items-start gap-3 ${log.includes('SUCCESS') ? 'text-green-400 font-bold' : 'text-blue-300'}`}>
-                    <span className="opacity-50 text-xs mt-0.5">[{new Date().toISOString().split('T')[1].substring(0, 8)}]</span>
-                    <span>{log}</span>
-                  </div>
+      <div className="flex-1 flex gap-6 overflow-hidden">
+        {/* Kanban Board */}
+        <div className="flex-1 flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+          {columns.map(status => (
+            <div key={status} className="flex-1 min-w-[300px] bg-muted/20 border border-border rounded-xl flex flex-col">
+              <div className="p-4 border-b border-border bg-card/50 rounded-t-xl flex justify-between items-center">
+                <h3 className="font-semibold text-sm uppercase tracking-wider">{status}</h3>
+                <span className="bg-secondary text-secondary-foreground text-xs px-2 py-0.5 rounded-full font-mono">
+                  {cases.filter(c => c.status === status).length}
+                </span>
+              </div>
+              <div className="p-4 flex-1 overflow-y-auto space-y-4">
+                {cases.filter(c => c.status === status).map(c => (
+                  <motion.div
+                    layoutId={`case-${c.id}`}
+                    key={c.id}
+                    onClick={() => setSelectedCase(c)}
+                    className="bg-card border border-border p-4 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-shadow"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs font-mono text-muted-foreground">{c.id}</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                        c.severity === 'CRITICAL' ? 'bg-red-500/20 text-red-500' :
+                        c.severity === 'HIGH' ? 'bg-orange-500/20 text-orange-500' :
+                        c.severity === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-500' :
+                        'bg-blue-500/20 text-blue-500'
+                      }`}>
+                        {c.severity}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-foreground mb-1">{c.title}</h4>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{c.description}</p>
+                    <div className="flex justify-between items-center text-xs text-muted-foreground">
+                      <span>{c.assignedTo}</span>
+                      <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> {c.evidence.length}</span>
+                    </div>
+                  </motion.div>
                 ))}
-                
-                {progress < 100 && (
-                  <div className="flex items-center gap-2 text-blue-400 mt-4 animate-pulse">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Processing...</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-8">
-                <div className="flex justify-between text-xs mb-2 font-semibold">
-                  <span className={progress === 100 ? "text-green-400" : "text-blue-400"}>
-                    {progress === 100 ? "INITIALIZATION COMPLETE" : "INITIALIZING..."}
-                  </span>
-                  <span className="text-white">{progress}%</span>
-                </div>
-                <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div className={`h-full transition-all duration-500 ${progress === 100 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${progress}%` }}/>
-                </div>
               </div>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {isOnline && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full h-full flex-1"
-          >
+        {/* Case Details Slide Over */}
+        <AnimatePresence>
+          {selectedCase && (
+            <motion.div
+              initial={{ opacity: 0, x: '100%' }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="w-96 bg-card border-l border-border shadow-2xl flex flex-col absolute right-0 top-0 bottom-0 z-40"
+            >
+              <div className="p-6 border-b border-border bg-muted/20 flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm font-mono mb-1">
+                    <FolderOpen className="w-4 h-4" /> {selectedCase.id}
+                  </div>
+                  <h2 className="text-xl font-bold text-foreground">{selectedCase.title}</h2>
+                </div>
+                <button onClick={() => setSelectedCase(null)} className="p-2 hover:bg-muted rounded-full transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {['To Do', 'In Progress', 'Closed'].map(col => (
-                <div key={col} className="bg-muted/10 border border-border rounded-xl p-4 min-h-[400px]">
-                  <h3 className="font-bold text-sm mb-4">{col}</h3>
-                  <div className="space-y-3">
-                    {cases.filter(c => c.status === col || (col === 'To Do' && c.status !== 'In Progress')).map((c, i) => (
-                      <div key={i} className="bg-white border border-border p-3 rounded-lg shadow-sm animate-in fade-in slide-in-from-top-4">
-                        <p className="text-xs font-mono text-muted-foreground">{c.id}</p>
-                        <p className="font-semibold text-sm">{c.type}</p>
-                      </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Description</h4>
+                  <p className="text-sm text-foreground bg-muted/30 p-3 rounded-lg border border-border/50 leading-relaxed">
+                    {selectedCase.description}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Status</h4>
+                    <span className="text-sm font-medium">{selectedCase.status}</span>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Severity</h4>
+                    <span className="text-sm font-bold text-red-500">{selectedCase.severity}</span>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Location</h4>
+                    <span className="text-sm font-medium">{selectedCase.location}</span>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Investigator</h4>
+                    <span className="text-sm font-medium">{selectedCase.assignedTo}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Logged Evidence</h4>
+                  <ul className="space-y-2">
+                    {selectedCase.evidence.map((ev, i) => (
+                      <li key={i} className="flex items-center gap-3 text-sm bg-secondary/50 px-3 py-2 rounded-lg border border-border">
+                        <AlertTriangle className="w-4 h-4 text-primary" /> {ev}
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </motion.div>
+              </div>
+
+              <div className="p-6 border-t border-border bg-muted/10">
+                <button className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors">
+                  Open Full Case File <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
