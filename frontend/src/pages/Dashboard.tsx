@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp, 
@@ -71,7 +71,7 @@ const INITIAL_HOTSPOTS = [
 ];
 
 export default function Dashboard() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [crimesToday, setCrimesToday] = useState(142);
   const [activeCases, setActiveCases] = useState(3102);
   const [respTime, setRespTime] = useState(252);
