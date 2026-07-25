@@ -77,6 +77,17 @@ export default function Dashboard() {
   const [respTime, setRespTime] = useState(252);
   const [riskScore, setRiskScore] = useState(84);
   const [hotspots, setHotspots] = useState(INITIAL_HOTSPOTS);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [isDeployed, setIsDeployed] = useState(false);
+
+  const handleDeploy = () => {
+    setIsDeploying(true);
+    setTimeout(() => {
+      setIsDeploying(false);
+      setIsDeployed(true);
+      setTimeout(() => setIsDeployed(false), 3000);
+    }, 1500);
+  };
   
   const [chartData, setChartData] = useState({
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
@@ -228,10 +239,27 @@ export default function Dashboard() {
             ))}
           </div>
           <button 
-            onClick={() => navigate('/patrols')}
-            className="w-full mt-6 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold shadow-[0_2px_10px_rgba(26,115,232,0.3)] transition-all active:scale-[0.98]"
+            onClick={handleDeploy}
+            disabled={isDeploying || isDeployed}
+            className={`w-full mt-6 py-2.5 rounded-xl text-sm font-bold shadow-[0_2px_10px_rgba(26,115,232,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
+              isDeployed 
+                ? 'bg-green-500 text-white' 
+                : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+            }`}
           >
-            Deploy Patrols
+            {isDeploying ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                Deploying...
+              </>
+            ) : isDeployed ? (
+              <>
+                <ShieldAlert className="w-4 h-4" />
+                Patrols Deployed
+              </>
+            ) : (
+              'Deploy Patrols'
+            )}
           </button>
         </motion.div>
       </div>

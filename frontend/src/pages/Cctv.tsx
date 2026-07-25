@@ -18,9 +18,16 @@ export default function Cctv() {
 
   useEffect(() => {
     fetch('/api/cctv')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('API Error');
+        return res.json();
+      })
       .then(data => {
         setCameras(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("CCTV API failed:", err);
         setLoading(false);
       });
   }, []);
@@ -76,7 +83,17 @@ export default function Cctv() {
                 </div>
               ) : (
                 <>
-                  <img src={cam.feedUrl} alt={cam.location} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" />
+                  <img 
+                    src={cam.feedUrl} 
+                    alt={cam.location} 
+                    onError={(e) => {
+                      const fallback = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23111' /><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='20' fill='%23666'>SIGNAL LOST / CORS BLOCKED</text></svg>";
+                      if (e.currentTarget.src !== fallback) {
+                        e.currentTarget.src = fallback;
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" 
+                  />
                   
                   {/* Fake AI Bounding Box overlay */}
                   <div className="absolute inset-0 pointer-events-none">

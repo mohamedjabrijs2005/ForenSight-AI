@@ -15,7 +15,7 @@ export default function handler(req, res) {
       status: "ACTIVE",
       aiDetections: ["Crowd Anomaly", "Unattended Item"],
       alertLevel: "MEDIUM",
-      feedUrl: "https://images.unsplash.com/photo-1541888043681-37016ce3a411?w=600&q=80",
+      feedUrl: "https://images.unsplash.com/photo-1555626906-fcf10d6851b4?w=600&q=80",
       timestamp: new Date().toISOString()
     },
     {
