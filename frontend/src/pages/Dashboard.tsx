@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp, 
@@ -70,6 +71,7 @@ const INITIAL_HOTSPOTS = [
 ];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [crimesToday, setCrimesToday] = useState(142);
   const [activeCases, setActiveCases] = useState(3102);
   const [respTime, setRespTime] = useState(252);
@@ -225,7 +227,10 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-          <button className="w-full mt-6 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold shadow-[0_2px_10px_rgba(26,115,232,0.3)] transition-all active:scale-[0.98]">
+          <button 
+            onClick={() => navigate('/patrols')}
+            className="w-full mt-6 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold shadow-[0_2px_10px_rgba(26,115,232,0.3)] transition-all active:scale-[0.98]"
+          >
             Deploy Patrols
           </button>
         </motion.div>
