@@ -87,7 +87,7 @@ export default function Cctv() {
                     src={cam.feedUrl} 
                     alt={cam.location} 
                     onError={(e) => {
-                      const fallback = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23111' /><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='20' fill='%23666'>SIGNAL LOST / CORS BLOCKED</text></svg>";
+                      const fallback = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Grand_Central_Terminal_Main_Concourse_2023.jpg/600px-Grand_Central_Terminal_Main_Concourse_2023.jpg";
                       if (e.currentTarget.src !== fallback) {
                         e.currentTarget.src = fallback;
                       }

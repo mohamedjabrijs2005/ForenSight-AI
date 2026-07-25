@@ -15,7 +15,7 @@ export default function handler(req, res) {
       status: "ACTIVE",
       aiDetections: ["Crowd Anomaly", "Unattended Item"],
       alertLevel: "MEDIUM",
-      feedUrl: "https://images.unsplash.com/photo-1555626906-fcf10d6851b4?w=600&q=80",
+      feedUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Grand_Central_Terminal_Main_Concourse_2023.jpg/600px-Grand_Central_Terminal_Main_Concourse_2023.jpg",
       timestamp: new Date().toISOString()
     },
     {
